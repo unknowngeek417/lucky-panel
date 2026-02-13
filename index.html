@@ -1,13 +1,206 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dq7-tool</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DQ7 ラッキーパネル攻略</title>
+    <style>
+        /* ご提示のスタイルをすべて移植 */
+        body { min-height: 100vh; background: #ffffff; padding: 15px; color: #1e293b; font-family: sans-serif; margin: 0; }
+        .app-container { maxWidth: 450px; margin: 0 auto; }
+        .app-title { text-align: center; font-size: 24px; font-weight: 900; color: #1e293b; margin-bottom: 15px; letter-spacing: 2px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .guide-text { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 10px; background: #f1f5f9; padding: 5px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .grid-container { display: grid; gap: 8px; margin-bottom: 20px; }
+        .card { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 12px; cursor: pointer; border: 2px solid #cbd5e1; background: #ffffff; color: #1e293b; user-select: none; transition: all 0.1s; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* 色設定 */
+        .c-A { background: #ef4444; border-color: #fca5a5; color: white; } 
+        .c-B { background: #22c55e; border-color: #86efac; color: white; } 
+        .c-C { background: #eab308; border-color: #fde047; color: white; } 
+        .c-D { background: #a855f7; border-color: #d8b4fe; color: white; } 
+        .c-E { background: #ec4899; border-color: #f9a8d4; color: white; } 
+        .c-F { background: #06b6d4; border-color: #67e8f9; color: white; } 
+        .c-G { background: #f97316; border-color: #fdba74; color: white; } 
+        .c-H { background: #64748b; border-color: #cbd5e1; color: white; } 
+        .c-I { background: #10b981; border-color: #6ee7b7; color: white; } 
+        .c-J { background: #3b82f6; border-color: #93c5fd; color: white; } 
+        .c-K { background: #fb7185; border-color: #fda4af; color: white; } 
+        .c-star { background: #fbbf24; border-color: #f59e0b; color: #92400e; box-shadow: 0 0 10px #fbbf24; }
+        .c-jk { background: #1e1b4b; border-color: #ef4444; color: #ef4444; }
+        .c-m { background: #10b981; border-color: #ffffff; color: white; }
+        .card-selected { border: 4px solid #3b82f6 !important; transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
+        .size-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+        .size-btn { padding: 10px 2px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.2s; }
+        .size-btn-label { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
+        .size-btn-sub { font-size: 11px; opacity: 0.8; }
+        .size-btn-active { background: #3b82f6; border-color: #2563eb; color: white; }
+        .reset-btn { width: 100%; padding: 15px; margin-top: 25px; border-radius: 12px; background: #fee2e2; color: #b91c1c; border: 2px solid #fca5a5; font-size: 18px; font-weight: 900; cursor: pointer; transition: all 0.2s; }
+        .status-bar { text-align: center; margin-bottom: 10px; padding: 10px; background: #f8fafc; border-radius: 10px; color: #1e293b; font-weight: bold; border: 1px solid #e2e8f0; }
+        .swap-active { background: #fef9c3; color: #854d0e; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-title">DQ7 ラッキーパネル攻略</div>
+        <div id="size-selector" class="size-selector"></div>
+        <div id="guide" class="guide-text">盤面の「数値」の位置を順にタップしてください</div>
+        <div id="status" class="status-bar"></div>
+        <div id="grid" class="grid-container"></div>
+        <button id="swap-mode-btn" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; font-weight: bold; cursor: pointer;">
+            カードの位置を入れ替える
+        </button>
+        <button id="reset-btn" class="reset-btn">盤面をすべてリセット</button>
+    </div>
+
+    <script>
+        // ロジック部分：ReactのuseStateをJavaScriptの変数で再現
+        const alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
+        const sizes = [
+            { t: 12, c: 4, l: '甘口', s: '(4x3)' },
+            { t: 16, c: 4, l: '中辛', s: '(4x4)' },
+            { t: 20, c: 5, l: '辛口', s: '(5x4)' },
+            { t: 24, c: 6, l: '激辛', s: '(6x4)' }
+        ];
+
+        let state = {
+            gridSize: sizes[3], // 最初は激辛(24枚)に設定
+            cards: Array(24).fill(''),
+            currentTool: '★',
+            tapCount: 0,
+            isSwapMode: false,
+            selectedIdx: null
+        };
+
+        function render() {
+            // ステータス表示の更新
+            const statusEl = document.getElementById('status');
+            const guideEl = document.getElementById('guide');
+            const swapBtn = document.getElementById('swap-mode-btn');
+
+            if (state.isSwapMode) {
+                statusEl.textContent = '✨ カード入れ替えモード';
+                statusEl.className = 'status-bar swap-active';
+                guideEl.textContent = "入れ替えたいカードを2枚選んでください";
+                swapBtn.textContent = '入力モードに戻る';
+                swapBtn.style.background = '#facc15';
+            } else {
+                const nextText = alphabet.includes(state.currentTool) ? `${state.currentTool} (${state.tapCount + 1}枚目)` : state.currentTool;
+                statusEl.textContent = `次に入力: ${nextText}`;
+                statusEl.className = 'status-bar';
+                guideEl.textContent = "盤面の「数値」の位置を順にタップしてください";
+                swapBtn.textContent = 'カードの位置を入れ替える';
+                swapBtn.style.background = '#f1f5f9';
+            }
+
+            // サイズ選択ボタンの描画
+            const sizeSelector = document.getElementById('size-selector');
+            sizeSelector.innerHTML = '';
+            sizes.forEach(size => {
+                const btn = document.createElement('button');
+                btn.className = `size-btn ${state.gridSize.t === size.t ? 'size-btn-active' : ''}`;
+                btn.innerHTML = `<span class="size-btn-label">${size.l}</span><span class="size-btn-sub">${size.s}</span>`;
+                btn.onclick = () => changeSize(size);
+                sizeSelector.appendChild(btn);
+            });
+
+            // グリッドの描画
+            const grid = document.getElementById('grid');
+            grid.style.gridTemplateColumns = `repeat(${state.gridSize.c}, 1fr)`;
+            grid.innerHTML = '';
+            const fontSize = state.gridSize.c === 4 ? '42px' : state.gridSize.c === 5 ? '36px' : '32px';
+
+            state.cards.forEach((val, i) => {
+                const card = document.createElement('div');
+                card.className = `card ${getColorClass(val)} ${state.selectedIdx === i ? 'card-selected' : ''}`;
+                card.style.fontSize = fontSize;
+                card.textContent = val;
+                card.onclick = () => handleCardClick(i);
+                grid.appendChild(card);
+            });
+        }
+
+        function getColorClass(val) {
+            if (val === '★') return 'c-star';
+            if (val === 'JK') return 'c-jk';
+            if (val === 'M') return 'c-m';
+            if (alphabet.includes(val)) return `c-${val}`;
+            return '';
+        }
+
+        function handleCardClick(i) {
+            if (state.isSwapMode) {
+                if (state.selectedIdx === null) {
+                    state.selectedIdx = i;
+                } else {
+                    const temp = state.cards[state.selectedIdx];
+                    state.cards[state.selectedIdx] = state.cards[i];
+                    state.cards[i] = temp;
+                    state.selectedIdx = null;
+                }
+            } else {
+                if (state.cards[i] === 'JK') { state.cards[i] = 'M'; }
+                else if (state.cards[i] === 'M') { state.cards[i] = 'JK'; }
+                else if (state.cards[i] === '★') {
+                    state.cards[i] = ''; state.currentTool = '★'; state.tapCount = 0;
+                }
+                else if (state.cards[i] === '') {
+                    state.cards[i] = state.currentTool;
+                    const filled = state.cards.filter(c => c !== '').length;
+                    if (filled === state.gridSize.t) {
+                        state.isSwapMode = true;
+                    } else {
+                        updateTool();
+                    }
+                }
+            }
+            render();
+        }
+
+        function updateTool() {
+            if (state.currentTool === '★') { state.currentTool = 'JK'; state.tapCount = 0; }
+            else if (state.currentTool === 'JK' || state.currentTool === 'M') { state.currentTool = 'A'; state.tapCount = 0; }
+            else if (alphabet.includes(state.currentTool)) {
+                state.tapCount++;
+                if (state.tapCount >= 2) {
+                    const idx = alphabet.indexOf(state.currentTool);
+                    if (idx < alphabet.length - 1) {
+                        state.currentTool = alphabet[idx + 1];
+                        state.tapCount = 0;
+                    }
+                }
+            }
+        }
+
+        function changeSize(size) {
+            if (confirm(`${size.l}に切り替え、盤面をリセットしますか？`)) {
+                state.gridSize = size;
+                state.cards = Array(size.t).fill('');
+                state.currentTool = '★';
+                state.tapCount = 0;
+                state.isSwapMode = false;
+                state.selectedIdx = null;
+                render();
+            }
+        }
+
+        document.getElementById('swap-mode-btn').onclick = () => {
+            state.isSwapMode = !state.isSwapMode;
+            state.selectedIdx = null;
+            render();
+        };
+
+        document.getElementById('reset-btn').onclick = () => {
+            if(confirm('すべて消去して盤面をリセットしますか？')) {
+                state.cards = Array(state.gridSize.total || state.gridSize.t).fill('');
+                state.currentTool = '★';
+                state.tapCount = 0;
+                state.isSwapMode = false;
+                state.selectedIdx = null;
+                render();
+            }
+        };
+
+        // 初期描画
+        render();
+    </script>
+</body>
 </html>
