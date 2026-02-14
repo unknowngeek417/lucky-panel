@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DQ7 パネル攻略</title>
+    <title>DQ7 ラッキーパネル攻略</title>
     <style>
         body { min-height: 100vh; background: #ffffff; padding: 15px; color: #1e293b; font-family: sans-serif; margin: 0; }
         .app-container { max-width: 450px; margin: 0 auto; }
-        .app-title { text-align: center; font-size: 24px; font-weight: 900; color: #1e293b; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .guide-text { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 10px; background: #f1f5f9; padding: 5px; border-radius: 8px; }
+        .app-title { text-align: center; font-size: 24px; font-weight: 900; color: #1e293b; margin-bottom: 15px; letter-spacing: 2px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .guide-text { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 10px; background: #f1f5f9; padding: 5px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .grid-container { display: grid; gap: 8px; margin-bottom: 20px; }
-        .card { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 12px; cursor: pointer; border: 2px solid #cbd5e1; background: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 12px; cursor: pointer; border: 2px solid #cbd5e1; background: #ffffff; color: #1e293b; user-select: none; transition: all 0.1s; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
+        /* 配色設定 */
         .c-star { background: #fbbf24; border-color: #f59e0b; }
-        .c-jk { background: #1e1b4b; border-color: #ef4444; color: #ffffff !important; }
-        .c-m { background: #10b981; border-color: #ffffff; color: #ffffff !important; }
+        .c-jk { background: #1e1b4b; border-color: #ef4444; color: white !important; }
+        .c-m { background: #10b981; border-color: #ffffff; color: white !important; }
         .c-A { background: #ef4444; border-color: #fca5a5; color: white; } 
         .c-B { background: #22c55e; border-color: #86efac; color: white; } 
         .c-C { background: #eab308; border-color: #fde047; color: white; } 
@@ -27,49 +28,77 @@
         .c-J { background: #3b82f6; border-color: #93c5fd; color: white; } 
         .c-K { background: #fb7185; border-color: #fda4af; color: white; } 
 
+        .card-selected { border: 4px solid #3b82f6 !important; transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
         .size-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-        .size-btn { padding: 10px 2px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; }
-        .size-btn-active { background: #3b82f6; color: white; border-color: #2563eb; }
-        .status-bar { text-align: center; margin-bottom: 10px; padding: 10px; background: #f8fafc; border-radius: 10px; font-weight: bold; border: 1px solid #e2e8f0; }
-        .reset-btn { width: 100%; padding: 15px; margin-top: 25px; border-radius: 12px; background: #fee2e2; color: #b91c1c; border: 2px solid #fca5a5; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .size-btn { padding: 10px 2px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; }
+        .size-btn-label { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
+        .size-btn-sub { font-size: 11px; opacity: 0.8; }
+        .size-btn-active { background: #3b82f6; border-color: #2563eb; color: white; }
+        .status-bar { text-align: center; margin-bottom: 10px; padding: 10px; background: #f8fafc; border-radius: 10px; color: #1e293b; font-weight: bold; border: 1px solid #e2e8f0; }
+        .swap-active { background: #fef9c3; color: #854d0e; border: 1px solid #facc15; }
+        .reset-btn { width: 100%; padding: 15px; margin-top: 25px; border-radius: 12px; background: #fee2e2; color: #b91c1c; border: 2px solid #fca5a5; font-size: 18px; font-weight: 900; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <div class="app-title">DQ7 ラッキーパネル</div>
+        <div class="app-title">DQ7 ラッキーパネル攻略</div>
         <div id="size-selector" class="size-selector"></div>
+        <div id="guide" class="guide-text">盤面の「数値」の位置を順にタップしてください</div>
         <div id="status" class="status-bar"></div>
         <div id="grid" class="grid-container"></div>
-        <button id="reset-btn" class="reset-btn">リセット</button>
+        <button id="swap-mode-btn" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; font-weight: bold; cursor: pointer; margin-bottom: 10px;">
+            カードの位置を入れ替える
+        </button>
+        <button id="reset-btn" class="reset-btn">盤面をすべてリセット</button>
     </div>
 
     <script>
         const alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
         const sizes = [
-            { t: 12, c: 4, l: '甘口' }, { t: 16, c: 4, l: '中辛' },
-            { t: 20, c: 5, l: '辛口' }, { t: 24, c: 6, l: '激辛' }
+            { t: 12, c: 4, l: '甘口', s: '(4x3)' },
+            { t: 16, c: 4, l: '中辛', s: '(4x4)' },
+            { t: 20, c: 5, l: '辛口', s: '(5x4)' },
+            { t: 24, c: 6, l: '激辛', s: '(6x4)' }
         ];
 
-        let state = { gridSize: sizes[0], cards: Array(12).fill(''), currentTool: '⭐', tapCount: 0 };
+        let state = {
+            gridSize: sizes[0],
+            cards: Array(12).fill(''),
+            currentTool: '⭐',
+            tapCount: 0,
+            isSwapMode: false,
+            selectedIdx: null
+        };
+
+        // ローカルストレージ復元
+        const saved = localStorage.getItem('dq7_final_v4');
+        if (saved) { state = JSON.parse(saved); state.selectedIdx = null; }
+        function save() { localStorage.setItem('dq7_final_v4', JSON.stringify(state)); }
 
         function render() {
             const statusEl = document.getElementById('status');
-            const sizeSelector = document.getElementById('size-selector');
+            const swapBtn = document.getElementById('swap-mode-btn');
             const grid = document.getElementById('grid');
 
-            statusEl.textContent = `次: ${state.currentTool} ${alphabet.includes(state.currentTool) ? `(${state.tapCount + 1}枚目)` : ''}`;
-            
+            if (state.isSwapMode) {
+                statusEl.textContent = '✨ カード入れ替えモード';
+                statusEl.className = 'status-bar swap-active';
+                swapBtn.textContent = '入力モードに戻る';
+                swapBtn.style.background = '#facc15';
+            } else {
+                statusEl.textContent = `次に入力: ${state.currentTool} ${alphabet.includes(state.currentTool) ? `(${state.tapCount + 1}枚目)` : ''}`;
+                statusEl.className = 'status-bar';
+                swapBtn.textContent = 'カードの位置を入れ替える';
+                swapBtn.style.background = '#f1f5f9';
+            }
+
+            const sizeSelector = document.getElementById('size-selector');
             sizeSelector.innerHTML = '';
             sizes.forEach(size => {
                 const btn = document.createElement('button');
                 btn.className = `size-btn ${state.gridSize.t === size.t ? 'size-btn-active' : ''}`;
-                btn.textContent = size.l;
-                btn.onclick = () => {
-                    if(confirm('リセットしてサイズ変更しますか？')){
-                        state.gridSize = size; state.cards = Array(size.t).fill(''); 
-                        state.currentTool = '⭐'; state.tapCount = 0; render();
-                    }
-                };
+                btn.innerHTML = `<span class="size-btn-label">${size.l}</span><span class="size-btn-sub">${size.s}</span>`;
+                btn.onclick = () => changeSize(size);
                 sizeSelector.appendChild(btn);
             });
 
@@ -82,21 +111,38 @@
                 else if (val === '🃏') cClass += ' c-jk';
                 else if (val === '🔄') cClass += ' c-m';
                 else if (val !== '') cClass += ` c-${val}`;
-                card.className = cClass;
+                card.className = `${cClass} ${state.selectedIdx === i ? 'card-selected' : ''}`;
+                card.style.fontSize = state.gridSize.c >= 6 ? '32px' : '40px';
                 card.textContent = val;
-                card.onclick = () => {
-                    if (state.cards[i] === '') {
-                        state.cards[i] = state.currentTool;
-                        updateTool();
-                    } else {
-                        state.currentTool = state.cards[i];
-                        state.cards[i] = '';
-                        state.tapCount = 0;
-                    }
-                    render();
-                };
+                card.onclick = () => handleCardClick(i);
                 grid.appendChild(card);
             });
+        }
+
+        function handleCardClick(i) {
+            if (state.isSwapMode) {
+                if (state.selectedIdx === null) { state.selectedIdx = i; } 
+                else {
+                    const temp = state.cards[state.selectedIdx];
+                    state.cards[state.selectedIdx] = state.cards[i];
+                    state.cards[i] = temp;
+                    state.selectedIdx = null;
+                }
+            } else {
+                if (state.cards[i] === '') {
+                    state.cards[i] = state.currentTool;
+                    if (state.cards.filter(c => c !== '').length === state.gridSize.t) {
+                        state.isSwapMode = true;
+                    } else {
+                        updateTool();
+                    }
+                } else {
+                    state.currentTool = state.cards[i];
+                    state.cards[i] = '';
+                    state.tapCount = 0;
+                }
+            }
+            save(); render();
         }
 
         function updateTool() {
@@ -112,10 +158,25 @@
             }
         }
 
+        function changeSize(size) {
+            if (confirm(`${size.l}${size.s}にリセットしますか？`)) {
+                state.gridSize = size; state.cards = Array(size.t).fill('');
+                state.currentTool = '⭐'; state.tapCount = 0; state.isSwapMode = false;
+                save(); render();
+            }
+        }
+
+        document.getElementById('swap-mode-btn').onclick = () => {
+            state.isSwapMode = !state.isSwapMode;
+            state.selectedIdx = null;
+            render();
+        };
+
         document.getElementById('reset-btn').onclick = () => {
             if(confirm('リセットしますか？')) {
                 state.cards = Array(state.gridSize.t).fill('');
-                state.currentTool = '⭐'; state.tapCount = 0; render();
+                state.currentTool = '⭐'; state.tapCount = 0; state.isSwapMode = false;
+                save(); render();
             }
         };
 
