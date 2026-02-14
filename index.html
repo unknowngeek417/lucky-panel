@@ -13,12 +13,15 @@
         .card { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 12px; cursor: pointer; border: 2px solid #cbd5e1; background: #ffffff; color: #1e293b; user-select: none; transition: all 0.1s; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
         .c-star { background: #fbbf24; border-color: #f59e0b; }
+        
+        /* JKをガイコツ(💀)に変更 */
         .c-jk { background: #1e1b4b; border-color: #ef4444; color: white !important; }
         
-        /* METALのスタイル：背景を薄い灰色、文字を小さく、文字色を濃いグレーに */
+        /* METALのスタイル */
         .c-m { background: #e2e8f0 !important; border-color: #94a3b8 !important; color: #475569 !important; }
         .text-metal { font-size: 14px !important; letter-spacing: -0.5px; }
 
+        /* 各アルファベットの配色 */
         .c-A { background: #ef4444; border-color: #fca5a5; color: white; } 
         .c-B { background: #22c55e; border-color: #86efac; color: white; } 
         .c-C { background: #eab308; border-color: #fde047; color: white; } 
@@ -117,7 +120,7 @@
                 const card = document.createElement('div');
                 let cClass = 'card';
                 if (val === '⭐') cClass += ' c-star';
-                else if (val === '🃏') cClass += ' c-jk';
+                else if (val === '💀') cClass += ' c-jk'; // ガイコツ
                 else if (val === 'METAL') {
                     cClass += ' c-m text-metal';
                 }
@@ -142,8 +145,9 @@
                     state.selectedIdx = null;
                 }
             } else {
-                if (state.cards[i] === '🃏') { state.cards[i] = 'METAL'; }
-                else if (state.cards[i] === 'METAL') { state.cards[i] = '🃏'; }
+                // タップで💀とMETALを切り替える挙動を維持
+                if (state.cards[i] === '💀') { state.cards[i] = 'METAL'; }
+                else if (state.cards[i] === 'METAL') { state.cards[i] = '💀'; }
                 else if (state.cards[i] === '⭐') { state.cards[i] = ''; state.currentTool = '⭐'; state.tapCount = 0; }
                 else if (state.cards[i] === '') {
                     state.cards[i] = state.currentTool;
@@ -158,8 +162,8 @@
         }
 
         function updateTool() {
-            if (state.currentTool === '⭐') state.currentTool = '🃏';
-            else if (state.currentTool === '🃏' || state.currentTool === 'METAL') { state.currentTool = 'A'; state.tapCount = 0; }
+            if (state.currentTool === '⭐') state.currentTool = '💀';
+            else if (state.currentTool === '💀' || state.currentTool === 'METAL') { state.currentTool = 'A'; state.tapCount = 0; }
             else if (alphabet.includes(state.currentTool)) {
                 state.tapCount++;
                 if (state.tapCount >= 2) {
