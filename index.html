@@ -7,12 +7,11 @@
     <style>
         body { min-height: 100vh; background: #ffffff; padding: 15px; color: #1e293b; font-family: sans-serif; margin: 0; }
         .app-container { max-width: 450px; margin: 0 auto; }
-        .app-title { text-align: center; font-size: 24px; font-weight: 900; color: #1e293b; margin-bottom: 15px; letter-spacing: 2px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .app-title { text-align: center; font-size: 24px; font-weight: 900; color: #1e293b; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
         .guide-text { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 10px; background: #f1f5f9; padding: 5px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .grid-container { display: grid; gap: 8px; margin-bottom: 20px; }
         .card { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 12px; cursor: pointer; border: 2px solid #cbd5e1; background: #ffffff; color: #1e293b; user-select: none; transition: all 0.1s; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
-        /* 配色設定 */
         .c-star { background: #fbbf24; border-color: #f59e0b; }
         .c-jk { background: #1e1b4b; border-color: #ef4444; color: white !important; }
         .c-m { background: #10b981; border-color: #ffffff; color: white !important; }
@@ -30,12 +29,12 @@
 
         .card-selected { border: 4px solid #3b82f6 !important; transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
         .size-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-        .size-btn { padding: 10px 2px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; }
-        .size-btn-label { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
-        .size-btn-sub { font-size: 11px; opacity: 0.8; }
+        .size-btn { padding: 10px 2px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .size-btn-label { font-size: 15px; font-weight: 800; }
+        .size-btn-sub { font-size: 11px; }
         .size-btn-active { background: #3b82f6; border-color: #2563eb; color: white; }
         .status-bar { text-align: center; margin-bottom: 10px; padding: 10px; background: #f8fafc; border-radius: 10px; color: #1e293b; font-weight: bold; border: 1px solid #e2e8f0; }
-        .swap-active { background: #fef9c3; color: #854d0e; border: 1px solid #facc15; }
+        .swap-active { background: #fef9c3 !important; color: #854d0e !important; border-color: #facc15 !important; }
         .reset-btn { width: 100%; padding: 15px; margin-top: 25px; border-radius: 12px; background: #fee2e2; color: #b91c1c; border: 2px solid #fca5a5; font-size: 18px; font-weight: 900; cursor: pointer; }
     </style>
 </head>
@@ -43,7 +42,7 @@
     <div class="app-container">
         <div class="app-title">DQ7 ラッキーパネル攻略</div>
         <div id="size-selector" class="size-selector"></div>
-        <div id="guide" class="guide-text">盤面の「数値」の位置を順にタップしてください</div>
+        <div id="guide" class="guide-text"></div>
         <div id="status" class="status-bar"></div>
         <div id="grid" class="grid-container"></div>
         <button id="swap-mode-btn" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; font-weight: bold; cursor: pointer; margin-bottom: 10px;">
@@ -70,38 +69,47 @@
             selectedIdx: null
         };
 
-        // ローカルストレージ復元
-        const saved = localStorage.getItem('dq7_final_v4');
-        if (saved) { state = JSON.parse(saved); state.selectedIdx = null; }
-        function save() { localStorage.setItem('dq7_final_v4', JSON.stringify(state)); }
-
         function render() {
             const statusEl = document.getElementById('status');
+            const guideEl = document.getElementById('guide');
             const swapBtn = document.getElementById('swap-mode-btn');
             const grid = document.getElementById('grid');
 
+            // ガイドとステータスの更新
             if (state.isSwapMode) {
+                guideEl.textContent = "入れ替えたいカードを2枚選んでください";
                 statusEl.textContent = '✨ カード入れ替えモード';
                 statusEl.className = 'status-bar swap-active';
                 swapBtn.textContent = '入力モードに戻る';
                 swapBtn.style.background = '#facc15';
+                swapBtn.style.color = '#854d0e';
             } else {
+                guideEl.textContent = "盤面の「数値」の位置を順にタップしてください";
                 statusEl.textContent = `次に入力: ${state.currentTool} ${alphabet.includes(state.currentTool) ? `(${state.tapCount + 1}枚目)` : ''}`;
                 statusEl.className = 'status-bar';
                 swapBtn.textContent = 'カードの位置を入れ替える';
                 swapBtn.style.background = '#f1f5f9';
+                swapBtn.style.color = '#475569';
             }
 
+            // サイズセレクターの描画
             const sizeSelector = document.getElementById('size-selector');
             sizeSelector.innerHTML = '';
             sizes.forEach(size => {
                 const btn = document.createElement('button');
                 btn.className = `size-btn ${state.gridSize.t === size.t ? 'size-btn-active' : ''}`;
                 btn.innerHTML = `<span class="size-btn-label">${size.l}</span><span class="size-btn-sub">${size.s}</span>`;
-                btn.onclick = () => changeSize(size);
+                btn.onclick = () => {
+                    if(confirm('リセットしてサイズを変更しますか？')){
+                        state.gridSize = size; state.cards = Array(size.t).fill('');
+                        state.currentTool = '⭐'; state.tapCount = 0; state.isSwapMode = false;
+                        render();
+                    }
+                };
                 sizeSelector.appendChild(btn);
             });
 
+            // グリッドの描画
             grid.style.gridTemplateColumns = `repeat(${state.gridSize.c}, 1fr)`;
             grid.innerHTML = '';
             state.cards.forEach((val, i) => {
@@ -111,6 +119,7 @@
                 else if (val === '🃏') cClass += ' c-jk';
                 else if (val === 'M') cClass += ' c-m';
                 else if (val !== '') cClass += ` c-${val}`;
+                
                 card.className = `${cClass} ${state.selectedIdx === i ? 'card-selected' : ''}`;
                 card.style.fontSize = state.gridSize.c >= 6 ? '32px' : '40px';
                 card.textContent = val;
@@ -121,8 +130,9 @@
 
         function handleCardClick(i) {
             if (state.isSwapMode) {
-                if (state.selectedIdx === null) { state.selectedIdx = i; } 
-                else {
+                if (state.selectedIdx === null) {
+                    state.selectedIdx = i;
+                } else {
                     const temp = state.cards[state.selectedIdx];
                     state.cards[state.selectedIdx] = state.cards[i];
                     state.cards[i] = temp;
@@ -137,32 +147,29 @@
                         updateTool();
                     }
                 } else {
-                    state.currentTool = state.cards[i];
+                    // 修正ロジック（🃏やMも含む）
+                    const clickedVal = state.cards[i];
                     state.cards[i] = '';
+                    state.currentTool = clickedVal;
                     state.tapCount = 0;
                 }
             }
-            save(); render();
+            render();
         }
 
         function updateTool() {
             if (state.currentTool === '⭐') state.currentTool = '🃏';
-            else if (state.currentTool === '🃏') state.currentTool = '🔄';
-            else if (state.currentTool === '🔄') { state.currentTool = 'A'; state.tapCount = 0; }
+            else if (state.currentTool === '🃏') state.currentTool = 'M';
+            else if (state.currentTool === 'M') { state.currentTool = 'A'; state.tapCount = 0; }
             else {
                 state.tapCount++;
                 if (state.tapCount >= 2) {
                     const idx = alphabet.indexOf(state.currentTool);
-                    if (idx < alphabet.length - 1) { state.currentTool = alphabet[idx + 1]; state.tapCount = 0; }
+                    if (idx < alphabet.length - 1) {
+                        state.currentTool = alphabet[idx + 1];
+                        state.tapCount = 0;
+                    }
                 }
-            }
-        }
-
-        function changeSize(size) {
-            if (confirm(`${size.l}${size.s}にリセットしますか？`)) {
-                state.gridSize = size; state.cards = Array(size.t).fill('');
-                state.currentTool = '⭐'; state.tapCount = 0; state.isSwapMode = false;
-                save(); render();
             }
         }
 
@@ -173,10 +180,10 @@
         };
 
         document.getElementById('reset-btn').onclick = () => {
-            if(confirm('リセットしますか？')) {
+            if(confirm('すべて消去してリセットしますか？')) {
                 state.cards = Array(state.gridSize.t).fill('');
                 state.currentTool = '⭐'; state.tapCount = 0; state.isSwapMode = false;
-                save(); render();
+                render();
             }
         };
 
