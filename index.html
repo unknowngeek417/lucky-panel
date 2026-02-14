@@ -109,7 +109,7 @@
                 let cClass = 'card';
                 if (val === '⭐') cClass += ' c-star';
                 else if (val === '🃏') cClass += ' c-jk';
-                else if (val === '🔄') cClass += ' c-m';
+                else if (val === 'M') cClass += ' c-m';
                 else if (val !== '') cClass += ` c-${val}`;
                 card.className = `${cClass} ${state.selectedIdx === i ? 'card-selected' : ''}`;
                 card.style.fontSize = state.gridSize.c >= 6 ? '32px' : '40px';
