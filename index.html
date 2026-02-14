@@ -15,6 +15,9 @@
         .c-star { background: #fbbf24; border-color: #f59e0b; }
         .c-jk { background: #1e1b4b; border-color: #ef4444; color: white !important; }
         .c-m { background: #10b981; border-color: #ffffff; color: white !important; }
+        /* METALの文字だけを小さくする設定 */
+        .text-metal { font-size: 14px !important; letter-spacing: -1px; }
+
         .c-A { background: #ef4444; border-color: #fca5a5; color: white; } 
         .c-B { background: #22c55e; border-color: #86efac; color: white; } 
         .c-C { background: #eab308; border-color: #fde047; color: white; } 
@@ -114,7 +117,9 @@
                 let cClass = 'card';
                 if (val === '⭐') cClass += ' c-star';
                 else if (val === '🃏') cClass += ' c-jk';
-                else if (val === 'M') cClass += ' c-m';
+                else if (val === 'METAL') {
+                    cClass += ' c-m text-metal'; // METAL専用のスタイルを適用
+                }
                 else if (val !== '') cClass += ` c-${val}`;
                 
                 card.className = `${cClass} ${state.selectedIdx === i ? 'card-selected' : ''}`;
@@ -136,9 +141,8 @@
                     state.selectedIdx = null;
                 }
             } else {
-                // 文字変更前と同じ挙動
-                if (state.cards[i] === '🃏') { state.cards[i] = 'M'; }
-                else if (state.cards[i] === 'M') { state.cards[i] = '🃏'; }
+                if (state.cards[i] === '🃏') { state.cards[i] = 'METAL'; }
+                else if (state.cards[i] === 'METAL') { state.cards[i] = '🃏'; }
                 else if (state.cards[i] === '⭐') { state.cards[i] = ''; state.currentTool = '⭐'; state.tapCount = 0; }
                 else if (state.cards[i] === '') {
                     state.cards[i] = state.currentTool;
@@ -154,7 +158,7 @@
 
         function updateTool() {
             if (state.currentTool === '⭐') state.currentTool = '🃏';
-            else if (state.currentTool === '🃏' || state.currentTool === 'M') { state.currentTool = 'A'; state.tapCount = 0; }
+            else if (state.currentTool === '🃏' || state.currentTool === 'METAL') { state.currentTool = 'A'; state.tapCount = 0; }
             else if (alphabet.includes(state.currentTool)) {
                 state.tapCount++;
                 if (state.tapCount >= 2) {
