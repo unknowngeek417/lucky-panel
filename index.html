@@ -12,7 +12,9 @@
         .grid-container { display: grid; gap: 8px; margin-bottom: 20px; }
         .card { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 12px; cursor: pointer; border: 2px solid #cbd5e1; background: #ffffff; color: #1e293b; user-select: none; transition: all 0.1s; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
-        /* カラー設定 */
+        .c-star { background: #fbbf24; border-color: #f59e0b; }
+        .c-jk { background: #1e1b4b; border-color: #ef4444; color: #ffffff !important; }
+        .c-m { background: #10b981; border-color: #ffffff; color: #ffffff !important; }
         .c-A { background: #ef4444; border-color: #fca5a5; color: white; } 
         .c-B { background: #22c55e; border-color: #86efac; color: white; } 
         .c-C { background: #eab308; border-color: #fde047; color: white; } 
@@ -24,18 +26,13 @@
         .c-I { background: #10b981; border-color: #6ee7b7; color: white; } 
         .c-J { background: #3b82f6; border-color: #93c5fd; color: white; } 
         .c-K { background: #fb7185; border-color: #fda4af; color: white; } 
-        .c-star { background: #fbbf24; border-color: #f59e0b; color: #92400e; box-shadow: 0 0 10px #fbbf24; }
-        .c-jk { background: #1e1b4b; border-color: #ef4444; color: #ef4444; }
-        .c-m { background: #10b981; border-color: #ffffff; color: white; }
-        .card-selected { border: 4px solid #3b82f6 !important; transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
 
+        .card-selected { border: 4px solid #3b82f6 !important; transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
         .size-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-        .size-btn { padding: 10px 2px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.2s; }
-        .size-btn-label { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
-        .size-btn-sub { font-size: 11px; opacity: 0.8; }
+        .size-btn { padding: 10px 2px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .size-btn-label { font-size: 15px; font-weight: 800; }
         .size-btn-active { background: #3b82f6; border-color: #2563eb; color: white; }
-        
-        .reset-btn { width: 100%; padding: 15px; margin-top: 25px; border-radius: 12px; background: #fee2e2; color: #b91c1c; border: 2px solid #fca5a5; font-size: 18px; font-weight: 900; cursor: pointer; transition: all 0.2s; }
+        .reset-btn { width: 100%; padding: 15px; margin-top: 25px; border-radius: 12px; background: #fee2e2; color: #b91c1c; border: 2px solid #fca5a5; font-size: 18px; font-weight: 900; cursor: pointer; }
         .status-bar { text-align: center; margin-bottom: 10px; padding: 10px; background: #f8fafc; border-radius: 10px; color: #1e293b; font-weight: bold; border: 1px solid #e2e8f0; }
         .swap-active { background: #fef9c3; color: #854d0e; border: 1px solid #facc15; }
     </style>
@@ -62,43 +59,33 @@
             { t: 24, c: 6, l: '激辛', s: '(6x4)' }
         ];
 
-        // 初期設定を甘口(index 0)に変更
         let state = {
             gridSize: sizes[0],
             cards: Array(12).fill(''),
-            currentTool: '★',
+            currentTool: '⭐',
             tapCount: 0,
             isSwapMode: false,
             selectedIdx: null
         };
 
-        // ローカルストレージから復元
-        const saved = localStorage.getItem('dq7_panel_save');
-        if (saved) {
-            state = JSON.parse(saved);
-            state.selectedIdx = null; // 選択状態はリセット
-        }
-
-        function save() {
-            localStorage.setItem('dq7_panel_save', JSON.stringify(state));
-        }
+        const saved = localStorage.getItem('dq7_panel_final');
+        if (saved) { state = JSON.parse(saved); state.selectedIdx = null; }
+        function save() { localStorage.setItem('dq7_panel_final', JSON.stringify(state)); }
 
         function render() {
             const statusEl = document.getElementById('status');
-            const guideEl = document.getElementById('guide');
             const swapBtn = document.getElementById('swap-mode-btn');
+            const grid = document.getElementById('grid');
 
             if (state.isSwapMode) {
                 statusEl.textContent = '✨ カード入れ替えモード';
                 statusEl.className = 'status-bar swap-active';
-                guideEl.textContent = "入れ替えたいカードを2枚選んでください";
                 swapBtn.textContent = '入力モードに戻る';
                 swapBtn.style.background = '#facc15';
             } else {
-                const nextText = alphabet.includes(state.currentTool) ? `${state.currentTool} (${state.tapCount + 1}枚目)` : state.currentTool;
-                statusEl.textContent = `次に入力: ${nextText}`;
+                let tool = state.currentTool;
+                statusEl.textContent = `次に入力: ${tool} ${alphabet.includes(tool) ? `(${state.tapCount + 1}枚目)` : ''}`;
                 statusEl.className = 'status-bar';
-                guideEl.textContent = "盤面の「数値」の位置を順にタップしてください";
                 swapBtn.textContent = 'カードの位置を入れ替える';
                 swapBtn.style.background = '#f1f5f9';
             }
@@ -108,53 +95,50 @@
             sizes.forEach(size => {
                 const btn = document.createElement('button');
                 btn.className = `size-btn ${state.gridSize.t === size.t ? 'size-btn-active' : ''}`;
-                btn.innerHTML = `<span class="size-btn-label">${size.l}</span><span class="size-btn-sub">${size.s}</span>`;
+                btn.innerHTML = `<span class="size-btn-label">${size.l}</span>`;
                 btn.onclick = () => changeSize(size);
                 sizeSelector.appendChild(btn);
             });
 
-            const grid = document.getElementById('grid');
             grid.style.gridTemplateColumns = `repeat(${state.gridSize.c}, 1fr)`;
             grid.innerHTML = '';
-            const fontSize = state.gridSize.c === 4 ? '42px' : state.gridSize.c === 5 ? '36px' : '32px';
-
             state.cards.forEach((val, i) => {
                 const card = document.createElement('div');
-                card.className = `card ${getColorClass(val)} ${state.selectedIdx === i ? 'card-selected' : ''}`;
-                card.style.fontSize = fontSize;
+                let cClass = 'card';
+                if (val === '⭐') cClass += ' c-star';
+                else if (val === '🃏') cClass += ' c-jk';
+                else if (val === '🔄') cClass += ' c-m';
+                else if (val !== '') cClass += ` c-${val}`;
+                card.className = `${cClass} ${state.selectedIdx === i ? 'card-selected' : ''}`;
+                card.style.fontSize = state.gridSize.c >= 6 ? '32px' : '40px';
                 card.textContent = val;
                 card.onclick = () => handleCardClick(i);
                 grid.appendChild(card);
             });
         }
 
-        function getColorClass(val) {
-            if (val === '★') return 'c-star';
-            if (val === 'JK') return 'c-jk';
-            if (val === 'M') return 'c-m';
-            if (alphabet.includes(val)) return `c-${val}`;
-            return '';
-        }
-
         function handleCardClick(i) {
             if (state.isSwapMode) {
-                if (state.selectedIdx === null) {
-                    state.selectedIdx = i;
-                } else {
+                if (state.selectedIdx === null) { state.selectedIdx = i; } 
+                else {
                     const temp = state.cards[state.selectedIdx];
                     state.cards[state.selectedIdx] = state.cards[i];
                     state.cards[i] = temp;
                     state.selectedIdx = null;
                 }
             } else {
-                if (state.cards[i] === 'JK') { state.cards[i] = 'M'; }
-                else if (state.cards[i] === 'M') { state.cards[i] = 'JK'; }
-                else if (state.cards[i] === '★') { state.cards[i] = ''; state.currentTool = '★'; state.tapCount = 0; }
-                else if (state.cards[i] === '') {
+                if (state.cards[i] === '') {
                     state.cards[i] = state.currentTool;
-                    const filled = state.cards.filter(c => c !== '').length;
-                    if (filled === state.gridSize.t) { state.isSwapMode = true; } 
-                    else { updateTool(); }
+                    if (state.cards.filter(c => c !== '').length === state.gridSize.t) {
+                        state.isSwapMode = true;
+                    } else {
+                        updateTool();
+                    }
+                } else {
+                    const val = state.cards[i];
+                    state.cards[i] = '';
+                    state.currentTool = val;
+                    state.tapCount = 0;
                 }
             }
             save();
@@ -162,25 +146,28 @@
         }
 
         function updateTool() {
-            if (state.currentTool === '★') { state.currentTool = 'JK'; state.tapCount = 0; }
-            else if (state.currentTool === 'JK' || state.currentTool === 'M') { state.currentTool = 'A'; state.tapCount = 0; }
-            else if (alphabet.includes(state.currentTool)) {
+            if (state.currentTool === '⭐') state.currentTool = '🃏';
+            else if (state.currentTool === '🃏') state.currentTool = '🔄';
+            else if (state.currentTool === '🔄') { state.currentTool = 'A'; state.tapCount = 0; }
+            else {
                 state.tapCount++;
                 if (state.tapCount >= 2) {
                     const idx = alphabet.indexOf(state.currentTool);
-                    if (idx < alphabet.length - 1) { state.currentTool = alphabet[idx + 1]; state.tapCount = 0; }
+                    if (idx < alphabet.length - 1) {
+                        state.currentTool = alphabet[idx + 1];
+                        state.tapCount = 0;
+                    }
                 }
             }
         }
 
         function changeSize(size) {
-            if (confirm(`${size.l}に切り替え、盤面をリセットしますか？`)) {
+            if (confirm(`${size.l}にリセットしますか？`)) {
                 state.gridSize = size;
                 state.cards = Array(size.t).fill('');
-                state.currentTool = '★';
+                state.currentTool = '⭐';
                 state.tapCount = 0;
                 state.isSwapMode = false;
-                state.selectedIdx = null;
                 save();
                 render();
             }
@@ -189,17 +176,15 @@
         document.getElementById('swap-mode-btn').onclick = () => {
             state.isSwapMode = !state.isSwapMode;
             state.selectedIdx = null;
-            save();
             render();
         };
 
         document.getElementById('reset-btn').onclick = () => {
-            if(confirm('すべて消去して盤面をリセットしますか？')) {
+            if(confirm('すべてリセットしますか？')) {
                 state.cards = Array(state.gridSize.t).fill('');
-                state.currentTool = '★';
+                state.currentTool = '⭐';
                 state.tapCount = 0;
                 state.isSwapMode = false;
-                state.selectedIdx = null;
                 save();
                 render();
             }
