@@ -14,9 +14,10 @@
         
         .c-star { background: #fbbf24; border-color: #f59e0b; }
         .c-jk { background: #1e1b4b; border-color: #ef4444; color: white !important; }
-        .c-m { background: #10b981; border-color: #ffffff; color: white !important; }
-        /* METALの文字だけを小さくする設定 */
-        .text-metal { font-size: 14px !important; letter-spacing: -1px; }
+        
+        /* METALのスタイル：背景を薄い灰色、文字を小さく、文字色を濃いグレーに */
+        .c-m { background: #e2e8f0 !important; border-color: #94a3b8 !important; color: #475569 !important; }
+        .text-metal { font-size: 14px !important; letter-spacing: -0.5px; }
 
         .c-A { background: #ef4444; border-color: #fca5a5; color: white; } 
         .c-B { background: #22c55e; border-color: #86efac; color: white; } 
@@ -118,7 +119,7 @@
                 if (val === '⭐') cClass += ' c-star';
                 else if (val === '🃏') cClass += ' c-jk';
                 else if (val === 'METAL') {
-                    cClass += ' c-m text-metal'; // METAL専用のスタイルを適用
+                    cClass += ' c-m text-metal';
                 }
                 else if (val !== '') cClass += ` c-${val}`;
                 
